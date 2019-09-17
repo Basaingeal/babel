@@ -1173,6 +1173,15 @@ export default class StatementParser extends ExpressionParser {
     );
   }
 
+  isStaticConstructor(method: N.ClassMethod | N.ClassProperty): boolean {
+    return (
+      !method.computed &&
+      method.static &&
+      (method.key.name === "constructor" || // Identifier
+        method.key.value === "constructor") // String literal
+    );
+  }
+
   parseClassBody(constructorAllowsSuper: boolean): N.ClassBody {
     this.state.classLevel++;
 
@@ -1503,6 +1512,12 @@ export default class StatementParser extends ExpressionParser {
       this.raise(
         prop.key.start,
         "Classes may not have a non-static field named 'constructor'",
+      );
+    }
+    if (this.isStaticConstructor(prop)) {
+      this.raise(
+        prop.key.start,
+        "Classes may not have a static field named 'constructor'",
       );
     }
     classBody.body.push(this.parseClassProperty(prop));
